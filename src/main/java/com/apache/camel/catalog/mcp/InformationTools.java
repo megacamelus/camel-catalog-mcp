@@ -1,6 +1,7 @@
 package com.apache.camel.catalog.mcp;
 
 import com.apache.camel.catalog.mcp.exceptions.ComponentNotFoundException;
+import com.felipestanzani.jtoon.JToon;
 import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
@@ -29,12 +30,12 @@ public class InformationTools {
     }
 
     @Tool(description = "Fetches detailed documentation for a specific Apache Camel component. Use this to understand its purpose, support level, maven artifact, headers, and URI syntax.")
-    public ToolResponse getInformationAboutComponent(@ToolArg(description = "The scheme name of the component. For example: 'file', 'kafka', or 'jms'.") String componentName) {
+    public String getInformationAboutComponent(@ToolArg(description = "The scheme name of the component. For example: 'file', 'kafka', or 'jms'.") String componentName) {
         final ComponentModel componentModel;
         try {
             componentModel = findComponent(componentName);
         } catch (ComponentNotFoundException e) {
-            return ToolResponse.error(e.getMessage());
+            return JToon.encode(e.getMessage());
         }
 
         JsonObject reply = new JsonObject();
@@ -49,17 +50,17 @@ public class InformationTools {
         reply.put("version", componentModel.getVersion());
         reply.put("syntax", componentModel.getSyntax());
 
-        return ToolResponse.success(reply.toString());
+        return JToon.encode(reply);
     }
 
 
     // This confuses the models, so have become an option of the getInfomrationAboutComponent
-    private ToolResponse getInformationAboutComponentOptions(String componentName) {
+    private String getInformationAboutComponentOptions(String componentName) {
         final ComponentModel componentModel;
         try {
             componentModel = findComponent(componentName);
         } catch (ComponentNotFoundException e) {
-            return ToolResponse.error(e.getMessage());
+            return JToon.encode(e.getMessage());
         }
 
         JsonObject reply = new JsonObject();
@@ -75,7 +76,7 @@ public class InformationTools {
 
         reply.put("options", array);
 
-        return ToolResponse.success(reply.toString());
+        return JToon.encode(reply);
     }
 
 
@@ -103,7 +104,7 @@ public class InformationTools {
 
 
     @Tool(description = "Lists all configurable options for a specific Apache Camel component. It can filter by type: 'component' properties or 'endpoint' URI parameters.")
-    public ToolResponse getInformationAboutOptions(@ToolArg(description = "The scheme name of the component. For example: 'file' or 'http'.") String componentName, @ToolArg(description = "The category of options to list: 'component' (bean properties) or 'endpoint' (URI parameters). Defaults to 'endpoint'.", defaultValue = "endpoint") String category) {
+    public String getInformationAboutOptions(@ToolArg(description = "The scheme name of the component. For example: 'file' or 'http'.") String componentName, @ToolArg(description = "The category of options to list: 'component' (bean properties) or 'endpoint' (URI parameters). Defaults to 'endpoint'.", defaultValue = "endpoint") String category) {
         if (category.equals("component")) {
             return getInformationAboutComponentOptions(componentName);
         }
@@ -112,10 +113,8 @@ public class InformationTools {
         try {
             componentModel = findComponent(componentName);
         } catch (ComponentNotFoundException e) {
-            return ToolResponse.error(e.getMessage());
+            return JToon.encode(e.getMessage());
         }
-
-
 
         JsonObject reply = new JsonObject();
         JsonArray array = new JsonArray();
@@ -131,7 +130,7 @@ public class InformationTools {
 
         reply.put("options", array);
 
-        return ToolResponse.success(reply.toString());
+        return JToon.encode(reply);
     }
 
     @Tool(description = "Fetches detailed properties of a single, named configuration option for an Apache Camel component. Can be filtered by category ('component' or 'endpoint'). It returns details like the option's data type, default value, and description.")
@@ -233,6 +232,24 @@ public class InformationTools {
     }
 
     /**
+     * Replaces the content of a section (parent div of an h2 with specific id) with a message
+     */
+    private void replaceH2SectionContent(Element root, String h2Id, String replacementText) {
+        Element h2 = root.selectFirst("h2#" + h2Id);
+        if (h2 != null && h2.parent() != null) {
+            Element parentDiv = h2.parent();
+            // Clear all content except the h2
+            parentDiv.children().forEach(child -> {
+                if (!child.equals(h2)) {
+                    child.remove();
+                }
+            });
+            // Add a paragraph with the replacement text
+            parentDiv.appendElement("p").text(replacementText);
+        }
+    }
+
+    /**
      * Cleans up markdown by removing excessive whitespace and formatting issues
      */
     private String cleanupMarkdown(String markdown) {
@@ -282,6 +299,13 @@ public class InformationTools {
             String htmlContent;
             Element articleElement = doc.selectFirst("article");
             if (articleElement != null) {
+                // Replace content of tables tool references to improve performances
+                replaceH2SectionContent(articleElement, "_configuring_options", "");
+                replaceH2SectionContent(articleElement, "_component_options",
+                    "The component options can be retrieved via the tool getInformationAboutOptions");
+                replaceH2SectionContent(articleElement, "_endpoint_options",
+                    "The endpoint options can be retrieved via the tool getInformationAboutOptions");
+
                 htmlContent = articleElement.html();
             } else {
                 htmlContent = doc.html();

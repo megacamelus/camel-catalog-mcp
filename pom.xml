@@ -70,6 +70,11 @@
             <artifactId>flexmark-html2md-converter</artifactId>
             <version>0.64.8</version>
         </dependency>
+        <dependency>
+            <groupId>com.felipestanzani</groupId>
+            <artifactId>jtoon</artifactId>
+            <version>0.1.1</version>
+        </dependency>
 
         <dependency>
             <groupId>org.jsoup</groupId>

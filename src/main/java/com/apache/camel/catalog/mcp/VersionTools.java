@@ -1,5 +1,6 @@
 package com.apache.camel.catalog.mcp;
 
+import com.felipestanzani.jtoon.JToon;
 import io.quarkiverse.mcp.server.McpLog;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
@@ -35,7 +36,7 @@ public class VersionTools {
      */
     @Tool(name = "camelQuarkusReleases",
             description = "Retrieves a list of Apache Camel Quarkus releases ordered by version (latest first), including version numbers, release dates, and compatibility information. Supports pagination via limit and offset parameters. Use this to discover available Camel Quarkus versions for migration planning or version compatibility checks.")
-    public List<ReleaseModel> camelQuarkusReleases(
+    public String camelQuarkusReleases(
             @ToolArg(description = "Maximum number of releases to return (optional, defaults to all releases)")
             Integer limit,
             @ToolArg(description = "Number of releases to skip from the beginning (optional, defaults to 0)")
@@ -68,7 +69,7 @@ public class VersionTools {
 
             log.info("Successfully retrieved %s of %s Camel Quarkus release(s) (offset: %s, limit: %s)",
                     result.size(), totalCount, actualOffset, limit != null ? limit : "all");
-            return result;
+            return JToon.encode(result);
         } catch (Exception e) {
             log.error("Error retrieving Camel Quarkus releases: %s", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve Camel Quarkus releases", e);
@@ -85,7 +86,7 @@ public class VersionTools {
      */
     @Tool(name = "camelReleases",
             description = "Retrieves a list of Apache Camel releases ordered by version (latest first), including version numbers, release dates, and LTS (Long Term Support) information. Supports pagination via limit and offset parameters. Helpful for understanding the Camel version history and planning upgrades.")
-    public List<ReleaseModel> camelReleases(
+    public String camelReleases(
             @ToolArg(description = "Maximum number of releases to return (optional, defaults to all releases)")
             Integer limit,
             @ToolArg(description = "Number of releases to skip from the beginning (optional, defaults to 0)")
@@ -118,7 +119,7 @@ public class VersionTools {
 
             log.info("Successfully retrieved %s of %s Camel release(s) (offset: %s, limit: %s)",
                     result.size(), totalCount, actualOffset, limit != null ? limit : "all");
-            return result;
+            return JToon.encode(result);
         } catch (Exception e) {
             log.error("Error retrieving Camel releases: %s", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve Camel releases", e);

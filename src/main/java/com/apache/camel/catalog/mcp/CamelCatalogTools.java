@@ -1,5 +1,6 @@
 package com.apache.camel.catalog.mcp;
 
+import com.felipestanzani.jtoon.JToon;
 import io.quarkiverse.mcp.server.McpLog;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
@@ -32,7 +33,7 @@ public class CamelCatalogTools {
      */
     @Tool(name = "findComponentNames",
           description = "Discovers all available Apache Camel component names in the catalog. Use this to explore what components are available, especially useful for finding Kafka-related, database, messaging, or other types of components. Returns a complete list of component names that can be used with the camelProperties tool to get detailed configuration information.")
-    public List<String> findComponentNames(
+    public String findComponentNames(
             @ToolArg(description = "Optional filter string to match component names (case-insensitive). Only components containing this string will be returned. Leave empty to get all components.", required = false)
             String filter,
             McpLog log) {
@@ -52,7 +53,7 @@ public class CamelCatalogTools {
                 log.info("Successfully retrieved %s component name(s)", componentNames.size());
             }
 
-            return componentNames;
+            return JToon.encode(componentNames);
         } catch (Exception e) {
             log.error("Error retrieving component names: %s", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve component names", e);
@@ -68,9 +69,9 @@ public class CamelCatalogTools {
      * @return JSON schema string describing the data format's configuration options
      */
     @Tool(name = "dataFormatProperties",
-          description = "Retrieves the complete JSON schema for a specific Apache Camel data format, including all configurable properties, data types, default values, and documentation. Data formats handle marshalling and unmarshalling of data (e.g., JSON, XML, CSV, Avro, Protobuf). Use this to explore data format configuration options, understand property types, and generate proper data format configurations.")
+          description = "Retrieves the complete JSON schema for a specific Apache Camel data format, including all configurable properties, data types, default values, and documentation. Data formats handle marshalling and unmarshalling of data (e.g., protobuf, bindy, base64, beanio, jackson, jacksonXml). Use this to explore data format configuration options, understand property types, and generate proper data format configurations.")
     public String dataFormatProperties(
-            @ToolArg(description = "The name of the Camel data format to query (e.g., 'json', 'xml', 'csv', 'avro').")
+            @ToolArg(description = "The name of the Camel data format to query (e.g., 'protobuf', 'bindy', 'base64', 'beanio', 'jackson', 'jacksonXml').")
             String dataFormatName,
             McpLog log) {
 
@@ -93,7 +94,7 @@ public class CamelCatalogTools {
                      dataFormatName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
-            return schema;
+            return JToon.encodeJson(schema);
         } catch (IllegalArgumentException e) {
             // Re-throw validation exceptions
             throw e;
@@ -111,13 +112,13 @@ public class CamelCatalogTools {
      */
     @Tool(name = "findDataFormatNames",
           description = "Discovers all available Apache Camel data format names in the catalog. Data formats handle marshalling and unmarshalling of data (e.g., JSON, XML, CSV, Avro, Protobuf). Use this to explore available data transformation formats for message processing.")
-    public List<String> findDataFormatNames(McpLog log) {
+    public String findDataFormatNames(McpLog log) {
         log.info("Fetching all data format names from catalog");
 
         try {
             List<String> dataFormatNames = camelCatalog.findDataFormatNames();
             log.info("Successfully retrieved %s data format name(s)", dataFormatNames != null ? dataFormatNames.size() : 0);
-            return dataFormatNames;
+            return JToon.encode(dataFormatNames);
         } catch (Exception e) {
             log.error("Error retrieving data format names: %s", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve data format names", e);
@@ -158,7 +159,7 @@ public class CamelCatalogTools {
                      languageName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
-            return schema;
+            return JToon.encodeJson(schema);
         } catch (IllegalArgumentException e) {
             // Re-throw validation exceptions
             throw e;
@@ -176,13 +177,13 @@ public class CamelCatalogTools {
      */
     @Tool(name = "findLanguageNames",
           description = "Discovers all available Apache Camel expression language names in the catalog. Languages are used for evaluating expressions and predicates in routes (e.g., Simple, XPath, JsonPath, Groovy, OGNL). Use this to explore available options for route expressions and content-based routing.")
-    public List<String> findLanguageNames(McpLog log) {
+    public String findLanguageNames(McpLog log) {
         log.info("Fetching all language names from catalog");
 
         try {
             List<String> languageNames = camelCatalog.findLanguageNames();
             log.info("Successfully retrieved %s language name(s)", languageNames != null ? languageNames.size() : 0);
-            return languageNames;
+            return JToon.encode(languageNames);
         } catch (Exception e) {
             log.error("Error retrieving language names: %s", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve language names", e);
@@ -223,7 +224,7 @@ public class CamelCatalogTools {
                      modelName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
-            return schema;
+            return JToon.encodeJson(schema);
         } catch (IllegalArgumentException e) {
             // Re-throw validation exceptions
             throw e;
@@ -241,13 +242,13 @@ public class CamelCatalogTools {
      */
     @Tool(name = "findModelNames",
           description = "Discovers all available Apache Camel EIP (Enterprise Integration Pattern) model names in the catalog. EIP patterns define routing and mediation rules (e.g., choice, split, aggregate, enrich, multicast). Use this to explore available integration patterns for building Camel routes.")
-    public List<String> findModelNames(McpLog log) {
+    public String findModelNames(McpLog log) {
         log.info("Fetching all model (EIP) names from catalog");
 
         try {
             List<String> modelNames = camelCatalog.findModelNames();
             log.info("Successfully retrieved %s model name(s)", modelNames != null ? modelNames.size() : 0);
-            return modelNames;
+            return JToon.encode(modelNames);
         } catch (Exception e) {
             log.error("Error retrieving model names: %s", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve model names", e);
@@ -288,7 +289,7 @@ public class CamelCatalogTools {
                      transformerName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
-            return schema;
+            return JToon.encodeJson(schema);
         } catch (IllegalArgumentException e) {
             // Re-throw validation exceptions
             throw e;
@@ -306,13 +307,14 @@ public class CamelCatalogTools {
      */
     @Tool(name = "findTransformerNames",
           description = "Discovers all available Apache Camel transformer names in the catalog. Transformers handle data type conversions and message transformations between different formats. Use this to explore available transformation capabilities for data conversion in routes.")
-    public List<String> findTransformerNames(McpLog log) {
+    public String findTransformerNames(McpLog log) {
         log.info("Fetching all transformer names from catalog");
 
         try {
             List<String> transformerNames = camelCatalog.findTransformerNames();
             log.info("Successfully retrieved %s transformer name(s)", transformerNames != null ? transformerNames.size() : 0);
-            return transformerNames;
+
+            return JToon.encode(transformerNames);
         } catch (Exception e) {
             log.error("Error retrieving transformer names: %s", e.getMessage(), e);
             throw new RuntimeException("Failed to retrieve transformer names", e);
@@ -328,7 +330,7 @@ public class CamelCatalogTools {
      */
     @Tool(name = "validateEndpointProperties",
           description = "Validates a Camel endpoint URI and returns comprehensive validation results including any configuration errors, unknown properties, and property type mismatches. Use this to catch configuration errors before runtime. Example: 'kafka:my-topic?brokers=localhost:9092' - helps ensure endpoint URIs are correctly formed and all properties are valid.")
-    public EndpointValidationResult validateEndpointProperties(
+    public String validateEndpointProperties(
             @ToolArg(description = "The Camel endpoint URI to validate (e.g., 'kafka:my-topic?brokers=localhost:9092', 'file:/data/inbox?delay=5000').")
             String uri,
             McpLog log) {
@@ -349,7 +351,7 @@ public class CamelCatalogTools {
                 log.info("Endpoint URI '%s' validated successfully", uri);
             }
 
-            return result;
+            return JToon.encode(result);
         } catch (Exception e) {
             log.error("Error validating endpoint URI '%s': %s", uri, e.getMessage(), e);
             throw new RuntimeException("Failed to validate endpoint URI: '" + uri + "'", e);
@@ -365,7 +367,7 @@ public class CamelCatalogTools {
      */
     @Tool(name = "endpointProperties",
           description = "Parses a Camel endpoint URI and extracts all configuration properties as key-value pairs. This is useful for understanding what properties are configured in an endpoint URI or for programmatically inspecting endpoint configurations. Example: parsing 'kafka:my-topic?brokers=localhost:9092&groupId=mygroup' returns a map with brokers, groupId, and other properties.")
-    public Map<String, String> endpointProperties(
+    public String endpointProperties(
             @ToolArg(description = "The Camel endpoint URI to parse (e.g., 'kafka:my-topic?brokers=localhost:9092', 'timer:tick?period=1000').")
             String uri,
             McpLog log) {
@@ -381,7 +383,7 @@ public class CamelCatalogTools {
             Map<String, String> properties = camelCatalog.endpointProperties(uri);
             log.info("Successfully parsed %s propert(ies) from URI '%s'",
                     properties != null ? properties.size() : 0, uri);
-            return properties;
+            return JToon.encode(properties);
         } catch (URISyntaxException e) {
             log.error("Invalid URI syntax for '%s': %s", uri, e.getMessage(), e);
             throw new RuntimeException("Invalid endpoint URI syntax: '" + uri + "' - " + e.getMessage(), e);
@@ -421,7 +423,7 @@ public class CamelCatalogTools {
             }
 
             log.info("Extracted component name '%s' from URI '%s'", componentName, uri);
-            return componentName;
+            return JToon.encode(componentName);
         } catch (Exception e) {
             log.error("Error extracting component name from URI '%s': %s", uri, e.getMessage(), e);
             throw new RuntimeException("Failed to extract component name from URI: '" + uri + "'", e);
