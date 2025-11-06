@@ -32,7 +32,7 @@ public class CamelCatalogTools {
      * @return List of all component names available in the catalog, optionally filtered
      */
     @Tool(name = "findComponentNames",
-          description = "Discovers all available Apache Camel component names in the catalog. Use this to explore what components are available, especially useful for finding Kafka-related, database, messaging, or other types of components. Returns a complete list of component names that can be used with the camelProperties tool to get detailed configuration information.")
+          description = "Discovers all available Apache Camel component names in the catalog. Use this to explore what components are available.")
     public String findComponentNames(
             @ToolArg(description = "Optional filter string to match component names (case-insensitive). Only components containing this string will be returned. Leave empty to get all components.", required = false)
             String filter,
@@ -69,9 +69,9 @@ public class CamelCatalogTools {
      * @return JSON schema string describing the data format's configuration options
      */
     @Tool(name = "dataFormatProperties",
-          description = "Retrieves the complete JSON schema for a specific Apache Camel data format, including all configurable properties, data types, default values, and documentation. Data formats handle marshalling and unmarshalling of data (e.g., protobuf, bindy, base64, beanio, jackson, jacksonXml). Use this to explore data format configuration options, understand property types, and generate proper data format configurations.")
+          description = "Retrieves the complete JSON schema for a specific Apache Camel data format, including all configurable properties.")
     public String dataFormatProperties(
-            @ToolArg(description = "The name of the Camel data format to query (e.g., 'protobuf', 'bindy', 'base64', 'beanio', 'jackson', 'jacksonXml').")
+            @ToolArg(description = "The name of the Camel data format to query (e.g., 'json', 'xml', 'csv', 'avro').")
             String dataFormatName,
             McpLog log) {
 
@@ -111,7 +111,7 @@ public class CamelCatalogTools {
      * @return List of all data format names available in the catalog
      */
     @Tool(name = "findDataFormatNames",
-          description = "Discovers all available Apache Camel data format names in the catalog. Data formats handle marshalling and unmarshalling of data (e.g., JSON, XML, CSV, Avro, Protobuf). Use this to explore available data transformation formats for message processing.")
+          description = "Discovers all available Apache Camel data format names in the catalog. Use this to explore available data transformation formats for message processing.")
     public String findDataFormatNames(McpLog log) {
         log.info("Fetching all data format names from catalog");
 
@@ -134,7 +134,7 @@ public class CamelCatalogTools {
      * @return JSON schema string describing the language's configuration options
      */
     @Tool(name = "languageProperties",
-          description = "Retrieves the complete JSON schema for a specific Apache Camel expression language, including all configurable properties, data types, default values, and documentation. Languages are used for evaluating expressions and predicates in routes (e.g., Simple, XPath, JsonPath, Groovy, OGNL). Use this to explore language configuration options and understand available expression capabilities.")
+          description = "Retrieves the complete JSON schema for a specific Apache Camel expression language.")
     public String languageProperties(
             @ToolArg(description = "The name of the Camel language to query (e.g., 'simple', 'xpath', 'jsonpath', 'groovy').")
             String languageName,
@@ -176,7 +176,7 @@ public class CamelCatalogTools {
      * @return List of all language names available in the catalog
      */
     @Tool(name = "findLanguageNames",
-          description = "Discovers all available Apache Camel expression language names in the catalog. Languages are used for evaluating expressions and predicates in routes (e.g., Simple, XPath, JsonPath, Groovy, OGNL). Use this to explore available options for route expressions and content-based routing.")
+          description = "Discovers all available Apache Camel expression language names in the catalog.")
     public String findLanguageNames(McpLog log) {
         log.info("Fetching all language names from catalog");
 

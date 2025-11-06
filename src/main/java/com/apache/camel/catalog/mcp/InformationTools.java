@@ -124,44 +124,15 @@ public class InformationTools {
             optionObj.put("name", option.getName());
             optionObj.put("kind", option.getKind());
             optionObj.put("description", option.getDescription());
+            optionObj.put("type", option.getType());
+            optionObj.put("defaultValue", option.getDefaultValue());
 
             array.add(optionObj);
         }
 
         reply.put("options", array);
 
-        return JToon.encode(reply);
-    }
-
-    @Tool(description = "Fetches detailed properties of a single, named configuration option for an Apache Camel component. Can be filtered by category ('component' or 'endpoint'). It returns details like the option's data type, default value, and description.")
-    public ToolResponse getInformationAboutSpecificOption(
-            @ToolArg(description = "The scheme name of the component. For example: 'file', 'kafka', or 'jms'.") String componentName,
-            @ToolArg(description = "The exact, case-sensitive name of the option to look up. For example: 'fileName' or 'bridgeErrorHandler'.") String optionName,
-            @ToolArg(description = "The category of the option: 'component' for bean properties or 'endpoint' for URI parameters. Defaults to 'endpoint'.", defaultValue = "endpoint") String category) {
-
-        if (category.equals("component")) {
-            return getInformationAboutSpecificComponentOption(componentName, optionName);
-        }
-
-        final ComponentModel componentModel;
-        try {
-            componentModel = findComponent(componentName);
-        } catch (ComponentNotFoundException e) {
-            return ToolResponse.error(e.getMessage());
-        }
-
-        JsonObject reply = new JsonObject();
-        final List<ComponentModel.EndpointOptionModel> componentOptions = componentModel.getEndpointOptions();
-        final ComponentModel.EndpointOptionModel option =
-                componentOptions.stream().filter(c -> c.getName().equals(optionName)).findFirst().get();
-
-        reply.put("name", option.getName());
-        reply.put("description", option.getDescription());
-        reply.put("kind", option.getKind());
-        reply.put("type", option.getType());
-        reply.put("defaultValue", option.getDefaultValue());
-
-        return ToolResponse.success(reply.toString());
+        return JToon.encodeJson(reply.toString());
     }
 
     @Tool(description = "Fetches the Maven and Gradle dependency snippets for a specific Apache Camel component. Use this to find the correct code to add to a project's build file.")
@@ -209,44 +180,6 @@ public class InformationTools {
         }
         // Fallback if version format is unexpected
         return version;
-    }
-
-    @Tool(description = "Fetches the URL for the official documentation page of a specific Apache Camel component. Use this when the user asks for a direct link.")
-    public ToolResponse getComponentURL(
-            @ToolArg(description = "The scheme name of the component. For example: 'file', 'kafka', or 'jms'.") String componentName) {
-        final ComponentModel componentModel;
-        try {
-            componentModel = findComponent(componentName);
-        } catch (ComponentNotFoundException e) {
-            return ToolResponse.error(e.getMessage());
-        }
-
-        final String baseVersion = extractMajorMinorVersion(componentModel.getVersion());
-
-        String page = "https://camel.apache.org/components/" + baseVersion + ".x/" + componentModel.getName() + "-component.html";
-
-        JsonObject reply = new JsonObject();
-        reply.put("page", page);
-
-        return ToolResponse.success(reply.toString());
-    }
-
-    /**
-     * Replaces the content of a section (parent div of an h2 with specific id) with a message
-     */
-    private void replaceH2SectionContent(Element root, String h2Id, String replacementText) {
-        Element h2 = root.selectFirst("h2#" + h2Id);
-        if (h2 != null && h2.parent() != null) {
-            Element parentDiv = h2.parent();
-            // Clear all content except the h2
-            parentDiv.children().forEach(child -> {
-                if (!child.equals(h2)) {
-                    child.remove();
-                }
-            });
-            // Add a paragraph with the replacement text
-            parentDiv.appendElement("p").text(replacementText);
-        }
     }
 
     /**
@@ -330,6 +263,24 @@ public class InformationTools {
             return ToolResponse.error("Failed to fetch documentation from " + url + ": " + e.getMessage());
         } catch (Exception e) {
             return ToolResponse.error("Failed to convert documentation to markdown: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Replaces the content of a section (parent div of an h2 with specific id) with a message
+     */
+    private void replaceH2SectionContent(Element root, String h2Id, String replacementText) {
+        Element h2 = root.selectFirst("h2#" + h2Id);
+        if (h2 != null && h2.parent() != null) {
+            Element parentDiv = h2.parent();
+            // Clear all content except the h2
+            parentDiv.children().forEach(child -> {
+                if (!child.equals(h2)) {
+                    child.remove();
+                }
+            });
+            // Add a paragraph with the replacement text
+            parentDiv.appendElement("p").text(replacementText);
         }
     }
 }
