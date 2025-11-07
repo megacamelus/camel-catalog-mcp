@@ -1,16 +1,11 @@
 package com.apache.camel.catalog.mcp;
 
 import com.felipestanzani.jtoon.JToon;
-import com.vladsch.flexmark.html2md.converter.FlexmarkHtmlConverter;
 import io.quarkiverse.mcp.server.Tool;
 import io.quarkiverse.mcp.server.ToolArg;
 import io.quarkiverse.mcp.server.ToolResponse;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.inject.Singleton;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -26,130 +21,150 @@ import java.util.List;
 @Singleton
 public class UpgradeTools {
 
-    // List of all available upgrade guide versions
-    private static final List<String> UPGRADE_VERSIONS = Arrays.asList(
-            "3.0", "3.1", "3.2", "3.3", "3.4", "3.5", "3.6", "3.7", "3.8", "3.9",
-            "3.10", "3.11", "3.12", "3.13", "3.14", "3.15", "3.16", "3.17", "3.18", "3.19",
-            "3.20", "3.21", "3.22",
-            "4.0", "4.1", "4.2", "4.3", "4.4", "4.5", "4.6", "4.7", "4.8", "4.9",
-            "4.10", "4.11", "4.12", "4.13", "4.14", "4.15", "4.16"
-    );
-
-    @Tool(description = "Lists all available Apache Camel upgrade guide versions. Use this to see which upgrade guides are available for migration between Camel versions.")
-    public ToolResponse getAvailableUpgradeVersions() {
-        JsonObject reply = new JsonObject();
-        JsonArray versionsArray = new JsonArray();
-
-        for (String version : UPGRADE_VERSIONS) {
-            versionsArray.add(version);
-        }
-
-        reply.put("versions", versionsArray);
-        reply.put("count", UPGRADE_VERSIONS.size());
-
-        return ToolResponse.success(JToon.encodeJson(reply.toString()));
-    }
-
-    @Tool(description = "Camel Upgrade guide documentation for a specific Apache Camel version. Use this when you need detailed information about upgrading to or from a specific Camel version.")
-    public ToolResponse getUpgradeGuideDocumentation(
-            @ToolArg(description = "The version of the upgrade guide to fetch. For example: '3.1', '4.0', '4.9'. Use getAvailableUpgradeVersions to see all available versions.") String version) {
-
-        // Validate the version
-        if (!UPGRADE_VERSIONS.contains(version)) {
-            return ToolResponse.error("Invalid version: " + version + ". Use getAvailableUpgradeVersions to see available versions.");
-        }
-
-        // Build the documentation URL based on the version
-        String url = buildUpgradeGuideUrl(version);
+    @Tool(description = "Camel Upgrade guide documentation for a major Apache Camel version. Use this when you need detailed information about upgrading to or from a specific Camel version.")
+    public ToolResponse getCamelUpgradeGuideDocumentation(
+            @ToolArg(description = "The major version of the upgrade guide to fetch. For example: '3' or '4'. Use null or empty string to retrieve all the upgrade guides.", required = false) String version) {
+        io.quarkus.logging.Log.infof("Tool invoked: getCamelUpgradeGuideDocumentation(version=%s)", version);
 
         try {
-            // Fetch the HTML documentation
-            Document doc = Jsoup.connect(url).get();
+            // If version is null or empty, return all guides merged by major version
+            if (version == null || version.isEmpty()) {
+                JsonObject allGuides = new JsonObject();
 
-            // Extract the content - prefer <article> tag if present, otherwise use full HTML
-            String htmlContent;
-            Element articleElement = doc.selectFirst("article");
-            if (articleElement != null) {
-                htmlContent = articleElement.html();
-            } else {
-                htmlContent = doc.html();
+                // Merge Camel 3 guides
+                String camel3Content = mergeGuides(
+                        "camel-3-migration-guide.md",
+                        "camel-3x-migration-guide.md"
+                );
+                if (camel3Content != null) {
+                    allGuides.put("camel-3-migration-guide", camel3Content);
+                }
+
+                // Merge Camel 4 guides
+                String camel4Content = mergeGuides(
+                        "camel-4-migration-guide.md",
+                        "camel-4x-migration-guide.md"
+                );
+                if (camel4Content != null) {
+                    allGuides.put("camel-4-migration-guide", camel4Content);
+                }
+
+                return ToolResponse.success(allGuides.toString());
             }
 
-            // Convert HTML to Markdown
-            FlexmarkHtmlConverter converter = FlexmarkHtmlConverter.builder().build();
-            String markdown = converter.convert(htmlContent);
+            // Normalize version input
+            String normalizedVersion = version.trim();
+            String mergedContent = null;
 
-            // Clean up the markdown
-            markdown = cleanupMarkdown(markdown);
+            // Map version to merged guides
+            if (normalizedVersion.equals("3")) {
+                mergedContent = mergeGuides(
+                        "camel-3-migration-guide.md",
+                        "camel-3x-migration-guide.md"
+                );
+            } else if (normalizedVersion.equals("4")) {
+                mergedContent = mergeGuides(
+                        "camel-4-migration-guide.md",
+                        "camel-4x-migration-guide.md"
+                );
+            } else {
+                return ToolResponse.error("Unknown version '" + version + "'. Available versions: 3, 4. Use empty string to get all guides.");
+            }
 
-            // Return the markdown documentation
-            JsonObject reply = new JsonObject();
-            reply.put("version", version);
-            reply.put("documentationUrl", url);
-            reply.put("markdown", markdown);
+            if (mergedContent == null) {
+                return ToolResponse.error("Failed to load guides for version '" + version + "'.");
+            }
 
-            return ToolResponse.success(reply.toString());
+            JsonObject result = new JsonObject();
+            result.put("camel-" + normalizedVersion + "-migration-guide", mergedContent);
 
-        } catch (IOException e) {
-            return ToolResponse.error("Failed to fetch upgrade guide from " + url + ": " + e.getMessage());
+            return ToolResponse.success(result.toString());
         } catch (Exception e) {
-            return ToolResponse.error("Failed to convert upgrade guide to markdown: " + e.getMessage());
+            return ToolResponse.error("Failed to load upgrade guide: " + e.getMessage());
         }
     }
 
-    /**
-     * Builds the URL for the upgrade guide based on the version
-     */
-    private String buildUpgradeGuideUrl(String version) {
-        String[] parts = version.split("\\.");
-        String majorVersion = parts[0];
+    @Tool(description = "Quarkus Upgrade guide documentation for major Quarkus versions. Use this when you need detailed information about upgrading Quarkus to or from a specific version.")
+    public ToolResponse getQuarkusUpgradeGuideDocumentation(
+            @ToolArg(description = "The major version of the upgrade guide to fetch. For example: '2' or '3'. Use null or empty string to retrieve all the upgrade guides.", required = false) String version) {
+        io.quarkus.logging.Log.infof("Tool invoked: getQuarkusUpgradeGuideDocumentation(version=%s)", version);
 
-        if (version.equals("3.0")) {
-            return "https://camel.apache.org/manual/camel-3-migration-guide.html";
-        } else if (version.equals("4.0")) {
-            return "https://camel.apache.org/manual/camel-4-migration-guide.html";
-        } else if (majorVersion.equals("3")) {
-            String minorVersion = parts[1];
-            return "https://camel.apache.org/manual/camel-3x-upgrade-guide-3_" + minorVersion + ".html";
-        } else if (majorVersion.equals("4")) {
-            String minorVersion = parts[1];
-            return "https://camel.apache.org/manual/camel-4x-upgrade-guide-4_" + minorVersion + ".html";
+        try {
+            // Define available Quarkus upgrade guides
+            List<String> quarkusGuides = Arrays.asList(
+                    "quarkus-2-migration.md",
+                    "quarkus-3-migration.md"
+            );
+
+            // If version is null or empty, return all guides
+            if (version == null || version.isEmpty()) {
+                JsonObject allGuides = new JsonObject();
+                for (String guide : quarkusGuides) {
+                    String content = loadGuideFromResource(guide);
+                    if (content != null) {
+                        allGuides.put(guide.replace(".md", ""), content);
+                    }
+                }
+                return ToolResponse.success(allGuides.toString());
+            }
+
+            // Normalize version input
+            String normalizedVersion = version.trim();
+            String guideFile = null;
+
+            // Map version to guide file
+            if (normalizedVersion.equals("2")) {
+                guideFile = "quarkus-2-migration.md";
+            } else if (normalizedVersion.equals("3")) {
+                guideFile = "quarkus-3-migration.md";
+            } else {
+                return ToolResponse.error("Unknown version '" + version + "'. Available versions: 2, 3. Use empty string to get all guides.");
+            }
+
+            String content = loadGuideFromResource(guideFile);
+            if (content == null) {
+                return ToolResponse.error("Guide file '" + guideFile + "' not found in resources.");
+            }
+
+            JsonObject result = new JsonObject();
+            result.put(guideFile.replace(".md", ""), content);
+
+            return ToolResponse.success(result.toString());
+        } catch (Exception e) {
+            return ToolResponse.error("Failed to load upgrade guide: " + e.getMessage());
         }
-
-        throw new IllegalArgumentException("Unsupported version: " + version);
     }
 
-    /**
-     * Cleans up markdown by removing excessive whitespace and formatting issues
-     */
-    private String cleanupMarkdown(String markdown) {
-        if (markdown == null || markdown.isEmpty()) {
-            return markdown;
+    private String mergeGuides(String... guideFiles) {
+        StringBuilder merged = new StringBuilder();
+        for (String guideFile : guideFiles) {
+            String content = loadGuideFromResource(guideFile);
+            if (content != null) {
+                if (merged.length() > 0) {
+                    merged.append("\n\n---\n\n");
+                }
+                merged.append(content);
+            }
         }
+        return merged.length() > 0 ? merged.toString() : null;
+    }
 
-        // Remove consecutive blank lines (more than 2 newlines in a row)
-        // Keep maximum of 2 newlines (one blank line between sections)
-        markdown = markdown.replaceAll("\n{3,}", "\n\n");
-
-        // Remove consecutive spaces (more than 2 spaces)
-        // Preserve double spaces at end of lines for markdown line breaks
-        markdown = markdown.replaceAll("(?<!\\n) {3,}", " ");
-
-        // Clean up spaces before newlines
-        markdown = markdown.replaceAll(" +\n", "\n");
-
-        // Clean up tabs and replace with spaces
-        markdown = markdown.replaceAll("\t", "    ");
-
-        // Remove trailing whitespace from the entire document
-        markdown = markdown.trim();
-
-        return markdown;
+    private String loadGuideFromResource(String fileName) {
+        try {
+            var inputStream = getClass().getClassLoader().getResourceAsStream("guides/" + fileName);
+            if (inputStream == null) {
+                return null;
+            }
+            return new String(inputStream.readAllBytes());
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     @Tool(description = "Lists all component versions compatible with a given Apache Camel release")
     public ToolResponse getCompatibleVersions(
             @ToolArg(description = "The Camel release version (e.g., '4.15.0', '4.14.0') or 'main' for the latest development version.") String release) {
+        io.quarkus.logging.Log.infof("Tool invoked: getCompatibleVersions(release=%s)", release);
 
         if (release == null || release.isEmpty()) {
             release = "main";

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "camel-catalog": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "/path/to/megacamelus/camel-catalog-mcp/target/camel-catalog-mcp-1.0.0-SNAPSHOT-runner.jar"
+      ],
+      "cwd": "/path/to/megacamelus/camel-catalog-mcp"
+    }
+  }
+}

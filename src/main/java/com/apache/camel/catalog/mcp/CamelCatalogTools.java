@@ -37,7 +37,7 @@ public class CamelCatalogTools {
             @ToolArg(description = "Optional filter string to match component names (case-insensitive). Only components containing this string will be returned. Leave empty to get all components.", required = false)
             String filter,
             McpLog log) {
-        log.info("Fetching component names from catalog" + (filter != null && !filter.trim().isEmpty() ? " with filter: '" + filter + "'" : ""));
+        log.info("Tool invoked: findComponentNames(filter=%s)", filter);
 
         try {
             List<String> componentNames = camelCatalog.findComponentNames();
@@ -48,9 +48,9 @@ public class CamelCatalogTools {
                 componentNames = componentNames.stream()
                     .filter(name -> name.toLowerCase().contains(filterLower))
                     .collect(Collectors.toList());
-                log.info("Successfully retrieved %s component name(s) matching filter '%s'", componentNames.size(), filter);
+                log.debug("Successfully retrieved %s component name(s) matching filter '%s'", componentNames.size(), filter);
             } else {
-                log.info("Successfully retrieved %s component name(s)", componentNames.size());
+                log.debug("Successfully retrieved %s component name(s)", componentNames.size());
             }
 
             return JToon.encode(componentNames);
@@ -74,23 +74,24 @@ public class CamelCatalogTools {
             @ToolArg(description = "The name of the Camel data format to query (e.g., 'json', 'xml', 'csv', 'avro').")
             String dataFormatName,
             McpLog log) {
+        log.info("Tool invoked: dataFormatProperties(dataFormatName=%s)", dataFormatName);
 
         if (dataFormatName == null || dataFormatName.trim().isEmpty()) {
-            log.error("Data format name cannot be null or empty");
+            log.debug("Data format name cannot be null or empty");
             throw new IllegalArgumentException("Data format name is required");
         }
 
-        log.info("Retrieving data format schema for: '%s'", dataFormatName);
+        log.debug("Retrieving data format schema for: '%s'", dataFormatName);
 
         try {
             String schema = camelCatalog.dataFormatJSonSchema(dataFormatName);
 
             if (schema == null || schema.isEmpty()) {
-                log.debug("No schema found for data format: '%s'", dataFormatName);
+                log.error("No schema found for data format: '%s'", dataFormatName);
                 throw new IllegalArgumentException("Data format '" + dataFormatName + "' not found in catalog. Please verify the data format name.");
             }
 
-            log.info("Successfully retrieved schema for data format '%s' (%s characters)",
+            log.debug("Successfully retrieved schema for data format '%s' (%s characters)",
                      dataFormatName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
@@ -113,11 +114,11 @@ public class CamelCatalogTools {
     @Tool(name = "findDataFormatNames",
           description = "Discovers all available Apache Camel data format names in the catalog. Use this to explore available data transformation formats for message processing.")
     public String findDataFormatNames(McpLog log) {
-        log.info("Fetching all data format names from catalog");
+        log.info("Tool invoked: findDataFormatNames()");
 
         try {
             List<String> dataFormatNames = camelCatalog.findDataFormatNames();
-            log.info("Successfully retrieved %s data format name(s)", dataFormatNames != null ? dataFormatNames.size() : 0);
+            log.debug("Successfully retrieved %s data format name(s)", dataFormatNames != null ? dataFormatNames.size() : 0);
             return JToon.encode(dataFormatNames);
         } catch (Exception e) {
             log.error("Error retrieving data format names: %s", e.getMessage(), e);
@@ -139,23 +140,24 @@ public class CamelCatalogTools {
             @ToolArg(description = "The name of the Camel language to query (e.g., 'simple', 'xpath', 'jsonpath', 'groovy').")
             String languageName,
             McpLog log) {
+        log.info("Tool invoked: languageProperties(languageName=%s)", languageName);
 
         if (languageName == null || languageName.trim().isEmpty()) {
             log.error("Language name cannot be null or empty");
             throw new IllegalArgumentException("Language name is required");
         }
 
-        log.info("Retrieving language schema for: '%s'", languageName);
+        log.debug("Retrieving language schema for: '%s'", languageName);
 
         try {
             String schema = camelCatalog.languageJSonSchema(languageName);
 
             if (schema == null || schema.isEmpty()) {
-                log.debug("No schema found for language: '%s'", languageName);
+                log.error("No schema found for language: '%s'", languageName);
                 throw new IllegalArgumentException("Language '" + languageName + "' not found in catalog. Please verify the language name.");
             }
 
-            log.info("Successfully retrieved schema for language '%s' (%s characters)",
+            log.debug("Successfully retrieved schema for language '%s' (%s characters)",
                      languageName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
@@ -178,11 +180,11 @@ public class CamelCatalogTools {
     @Tool(name = "findLanguageNames",
           description = "Discovers all available Apache Camel expression language names in the catalog.")
     public String findLanguageNames(McpLog log) {
-        log.info("Fetching all language names from catalog");
+        log.info("Tool invoked: findLanguageNames()");
 
         try {
             List<String> languageNames = camelCatalog.findLanguageNames();
-            log.info("Successfully retrieved %s language name(s)", languageNames != null ? languageNames.size() : 0);
+            log.debug("Successfully retrieved %s language name(s)", languageNames != null ? languageNames.size() : 0);
             return JToon.encode(languageNames);
         } catch (Exception e) {
             log.error("Error retrieving language names: %s", e.getMessage(), e);
@@ -204,23 +206,24 @@ public class CamelCatalogTools {
             @ToolArg(description = "The name of the Camel EIP model to query (e.g., 'choice', 'split', 'aggregate', 'multicast', 'enrich').")
             String modelName,
             McpLog log) {
+        log.info("Tool invoked: modelProperties(modelName=%s)", modelName);
 
         if (modelName == null || modelName.trim().isEmpty()) {
-            log.error("Model name cannot be null or empty");
+            log.debug("Model name cannot be null or empty");
             throw new IllegalArgumentException("Model name is required");
         }
 
-        log.info("Retrieving model schema for: '%s'", modelName);
+        log.debug("Retrieving model schema for: '%s'", modelName);
 
         try {
             String schema = camelCatalog.modelJSonSchema(modelName);
 
             if (schema == null || schema.isEmpty()) {
-                log.debug("No schema found for model: '%s'", modelName);
+                log.error("No schema found for model: '%s'", modelName);
                 throw new IllegalArgumentException("Model '" + modelName + "' not found in catalog. Please verify the model name.");
             }
 
-            log.info("Successfully retrieved schema for model '%s' (%s characters)",
+            log.debug("Successfully retrieved schema for model '%s' (%s characters)",
                      modelName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
@@ -243,11 +246,11 @@ public class CamelCatalogTools {
     @Tool(name = "findModelNames",
           description = "Discovers all available Apache Camel EIP (Enterprise Integration Pattern) model names in the catalog. EIP patterns define routing and mediation rules (e.g., choice, split, aggregate, enrich, multicast). Use this to explore available integration patterns for building Camel routes.")
     public String findModelNames(McpLog log) {
-        log.info("Fetching all model (EIP) names from catalog");
+        log.info("Tool invoked: findModelNames()");
 
         try {
             List<String> modelNames = camelCatalog.findModelNames();
-            log.info("Successfully retrieved %s model name(s)", modelNames != null ? modelNames.size() : 0);
+            log.debug("Successfully retrieved %s model name(s)", modelNames != null ? modelNames.size() : 0);
             return JToon.encode(modelNames);
         } catch (Exception e) {
             log.error("Error retrieving model names: %s", e.getMessage(), e);
@@ -269,23 +272,24 @@ public class CamelCatalogTools {
             @ToolArg(description = "The name of the Camel transformer to query.")
             String transformerName,
             McpLog log) {
+        log.info("Tool invoked: transformerProperties(transformerName=%s)", transformerName);
 
         if (transformerName == null || transformerName.trim().isEmpty()) {
             log.error("Transformer name cannot be null or empty");
             throw new IllegalArgumentException("Transformer name is required");
         }
 
-        log.info("Retrieving transformer schema for: '%s'", transformerName);
+        log.debug("Retrieving transformer schema for: '%s'", transformerName);
 
         try {
             String schema = camelCatalog.transformerJSonSchema(transformerName);
 
             if (schema == null || schema.isEmpty()) {
-                log.debug("No schema found for transformer: '%s'", transformerName);
+                log.error("No schema found for transformer: '%s'", transformerName);
                 throw new IllegalArgumentException("Transformer '" + transformerName + "' not found in catalog. Please verify the transformer name.");
             }
 
-            log.info("Successfully retrieved schema for transformer '%s' (%s characters)",
+            log.debug("Successfully retrieved schema for transformer '%s' (%s characters)",
                      transformerName, schema.length());
             log.debug("Schema preview: %s", schema.substring(0, Math.min(100, schema.length())) + "...");
 
@@ -308,11 +312,11 @@ public class CamelCatalogTools {
     @Tool(name = "findTransformerNames",
           description = "Discovers all available Apache Camel transformer names in the catalog. Transformers handle data type conversions and message transformations between different formats. Use this to explore available transformation capabilities for data conversion in routes.")
     public String findTransformerNames(McpLog log) {
-        log.info("Fetching all transformer names from catalog");
+        log.info("Tool invoked: findTransformerNames()");
 
         try {
             List<String> transformerNames = camelCatalog.findTransformerNames();
-            log.info("Successfully retrieved %s transformer name(s)", transformerNames != null ? transformerNames.size() : 0);
+            log.debug("Successfully retrieved %s transformer name(s)", transformerNames != null ? transformerNames.size() : 0);
 
             return JToon.encode(transformerNames);
         } catch (Exception e) {
@@ -334,21 +338,22 @@ public class CamelCatalogTools {
             @ToolArg(description = "The Camel endpoint URI to validate (e.g., 'kafka:my-topic?brokers=localhost:9092', 'file:/data/inbox?delay=5000').")
             String uri,
             McpLog log) {
+        log.info("Tool invoked: validateEndpointProperties(uri=%s)", uri);
 
         if (uri == null || uri.trim().isEmpty()) {
             log.error("Endpoint URI cannot be null or empty");
             throw new IllegalArgumentException("Endpoint URI is required");
         }
 
-        log.info("Validating endpoint URI: '%s'", uri);
+        log.debug("Validating endpoint URI: '%s'", uri);
 
         try {
             EndpointValidationResult result = camelCatalog.validateEndpointProperties(uri);
 
             if (result.hasErrors()) {
-                log.info("Validation found errors for URI '%s'", uri);
+                log.debug("Validation found errors for URI '%s'", uri);
             } else {
-                log.info("Endpoint URI '%s' validated successfully", uri);
+                log.debug("Endpoint URI '%s' validated successfully", uri);
             }
 
             return JToon.encode(result);
@@ -371,17 +376,18 @@ public class CamelCatalogTools {
             @ToolArg(description = "The Camel endpoint URI to parse (e.g., 'kafka:my-topic?brokers=localhost:9092', 'timer:tick?period=1000').")
             String uri,
             McpLog log) {
+        log.info("Tool invoked: endpointProperties(uri=%s)", uri);
 
         if (uri == null || uri.trim().isEmpty()) {
             log.error("Endpoint URI cannot be null or empty");
             throw new IllegalArgumentException("Endpoint URI is required");
         }
 
-        log.info("Parsing endpoint properties from URI: '%s'", uri);
+        log.debug("Parsing endpoint properties from URI: '%s'", uri);
 
         try {
             Map<String, String> properties = camelCatalog.endpointProperties(uri);
-            log.info("Successfully parsed %s propert(ies) from URI '%s'",
+            log.debug("Successfully parsed %s propert(ies) from URI '%s'",
                     properties != null ? properties.size() : 0, uri);
             return JToon.encode(properties);
         } catch (URISyntaxException e) {
@@ -406,23 +412,24 @@ public class CamelCatalogTools {
             @ToolArg(description = "The Camel endpoint URI to extract the component name from (e.g., 'kafka:my-topic', 'jms:queue:orders').")
             String uri,
             McpLog log) {
+        log.info("Tool invoked: endpointComponentName(uri=%s)", uri);
 
         if (uri == null || uri.trim().isEmpty()) {
             log.error("Endpoint URI cannot be null or empty");
             throw new IllegalArgumentException("Endpoint URI is required");
         }
 
-        log.info("Extracting component name from URI: '%s'", uri);
+        log.debug("Extracting component name from URI: '%s'", uri);
 
         try {
             String componentName = camelCatalog.endpointComponentName(uri);
 
             if (componentName == null || componentName.isEmpty()) {
-                log.info("Could not determine component name from URI: '%s'", uri);
+                log.debug("Could not determine component name from URI: '%s'", uri);
                 return null;
             }
 
-            log.info("Extracted component name '%s' from URI '%s'", componentName, uri);
+            log.debug("Extracted component name '%s' from URI '%s'", componentName, uri);
             return JToon.encode(componentName);
         } catch (Exception e) {
             log.error("Error extracting component name from URI '%s': %s", uri, e.getMessage(), e);
@@ -439,11 +446,11 @@ public class CamelCatalogTools {
     @Tool(name = "getCatalogVersion",
           description = "Returns the version of the Camel catalog being used. This represents the version of the catalog metadata and schemas, which typically corresponds to a Camel release version. Useful for understanding what Camel version information is available in the catalog.")
     public String getCatalogVersion(McpLog log) {
-        log.info("Retrieving catalog version");
+        log.info("Tool invoked: getCatalogVersion()");
 
         try {
             String version = camelCatalog.getCatalogVersion();
-            log.info("Catalog version: '%s'", version);
+            log.debug("Catalog version: '%s'", version);
             return version;
         } catch (Exception e) {
             log.error("Error retrieving catalog version: %s", e.getMessage(), e);
@@ -460,11 +467,11 @@ public class CamelCatalogTools {
     @Tool(name = "getLoadedVersion",
           description = "Returns the currently loaded Camel version in the catalog. If a specific version was loaded using loadVersion(), this returns that version. Otherwise, it returns the default version that was loaded. This can differ from getCatalogVersion() if a different Camel version was dynamically loaded into the catalog.")
     public String getLoadedVersion(McpLog log) {
-        log.info("Retrieving loaded Camel version");
+        log.info("Tool invoked: getLoadedVersion()");
 
         try {
             String version = camelCatalog.getLoadedVersion();
-            log.info("Loaded Camel version: '%s'", version);
+            log.debug("Loaded Camel version: '%s'", version);
             return version;
         } catch (Exception e) {
             log.error("Error retrieving loaded version: %s", e.getMessage(), e);

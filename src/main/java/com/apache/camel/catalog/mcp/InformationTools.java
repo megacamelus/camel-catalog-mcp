@@ -31,6 +31,7 @@ public class InformationTools {
 
     @Tool(description = "Fetches detailed documentation for a specific Apache Camel component. Use this to understand its purpose, support level, maven artifact, headers, and URI syntax.")
     public String getInformationAboutComponent(@ToolArg(description = "The scheme name of the component. For example: 'file', 'kafka', or 'jms'.") String componentName) {
+        io.quarkus.logging.Log.infof("Tool invoked: getInformationAboutComponent(componentName=%s)", componentName);
         final ComponentModel componentModel;
         try {
             componentModel = findComponent(componentName);
@@ -105,6 +106,7 @@ public class InformationTools {
 
     @Tool(description = "Lists all configurable options for a specific Apache Camel component. It can filter by type: 'component' properties or 'endpoint' URI parameters.")
     public String getInformationAboutOptions(@ToolArg(description = "The scheme name of the component. For example: 'file' or 'http'.") String componentName, @ToolArg(description = "The category of options to list: 'component' (bean properties) or 'endpoint' (URI parameters). Defaults to 'endpoint'.", defaultValue = "endpoint") String category) {
+        io.quarkus.logging.Log.infof("Tool invoked: getInformationAboutOptions(componentName=%s, category=%s)", componentName, category);
         if (category.equals("component")) {
             return getInformationAboutComponentOptions(componentName);
         }
@@ -138,6 +140,7 @@ public class InformationTools {
     @Tool(description = "Fetches the Maven and Gradle dependency snippets for a specific Apache Camel component. Use this to find the correct code to add to a project's build file.")
     public ToolResponse getDependency(
             @ToolArg(description = "The scheme name of the component. For example: 'file', 'kafka', or 'jms'.") String componentName) {
+        io.quarkus.logging.Log.infof("Tool invoked: getDependency(componentName=%s)", componentName);
         final ComponentModel componentModel;
         try {
             componentModel = findComponent(componentName);
@@ -213,6 +216,7 @@ public class InformationTools {
     @Tool(description = "Fetches and converts the full documentation for a specific Apache Camel component from the official documentation website to Markdown format. Use this when you need comprehensive documentation including examples, configuration details, and usage instructions.")
     public ToolResponse getComponentDocumentation(
             @ToolArg(description = "The scheme name of the component. For example: 'file', 'kafka', or 'jms'.") String componentName) {
+        io.quarkus.logging.Log.infof("Tool invoked: getComponentDocumentation(componentName=%s)", componentName);
         final ComponentModel componentModel;
         try {
             componentModel = findComponent(componentName);

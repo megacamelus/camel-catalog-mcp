@@ -57,12 +57,13 @@
             <artifactId>quarkus-arc</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.quarkiverse.mcp</groupId>
-            <artifactId>quarkus-mcp-server-sse</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-openshift</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>io.quarkiverse.mcp</groupId>
+            <artifactId>quarkus-mcp-server-core</artifactId>
         </dependency>
 
         <dependency>
@@ -149,6 +150,33 @@
     </build>
 
     <profiles>
+        <profile>
+            <id>stdio</id>
+            <properties>
+                <quarkus.profile>stdio</quarkus.profile>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkiverse.mcp</groupId>
+                    <artifactId>quarkus-mcp-server-stdio</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
+        <profile>
+            <id>sse</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <quarkus.profile>sse</quarkus.profile>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>io.quarkiverse.mcp</groupId>
+                    <artifactId>quarkus-mcp-server-sse</artifactId>
+                </dependency>
+            </dependencies>
+        </profile>
         <profile>
             <id>native</id>
             <activation>

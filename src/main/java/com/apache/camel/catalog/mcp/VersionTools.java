@@ -42,11 +42,9 @@ public class VersionTools {
             @ToolArg(description = "Number of releases to skip from the beginning (optional, defaults to 0)")
             Integer offset,
             McpLog log) {
+        log.info("Tool invoked: camelQuarkusReleases(limit=%s, offset=%s)", limit, offset);
 
         int actualOffset = offset != null ? Math.max(0, offset) : 0;
-        log.info("Fetching Camel Quarkus releases from catalog (limit: %s, offset: %s)",
-                limit != null ? limit : "all", actualOffset);
-
         try {
             List<ReleaseModel> releases = camelCatalog.camelQuarkusReleases();
 
@@ -67,7 +65,7 @@ public class VersionTools {
 
             List<ReleaseModel> result = stream.collect(Collectors.toList());
 
-            log.info("Successfully retrieved %s of %s Camel Quarkus release(s) (offset: %s, limit: %s)",
+            log.debug("Successfully retrieved %s of %s Camel Quarkus release(s) (offset: %s, limit: %s)",
                     result.size(), totalCount, actualOffset, limit != null ? limit : "all");
             return JToon.encode(result);
         } catch (Exception e) {
@@ -92,10 +90,9 @@ public class VersionTools {
             @ToolArg(description = "Number of releases to skip from the beginning (optional, defaults to 0)")
             Integer offset,
             McpLog log) {
+        log.info("Tool invoked: camelReleases(limit=%s, offset=%s)", limit, offset);
 
         int actualOffset = offset != null ? Math.max(0, offset) : 0;
-        log.info("Fetching Camel releases from catalog (limit: %s, offset: %s)",
-                limit != null ? limit : "all", actualOffset);
 
         try {
             List<ReleaseModel> releases = camelCatalog.camelReleases();
@@ -117,7 +114,7 @@ public class VersionTools {
 
             List<ReleaseModel> result = stream.collect(Collectors.toList());
 
-            log.info("Successfully retrieved %s of %s Camel release(s) (offset: %s, limit: %s)",
+            log.debug("Successfully retrieved %s of %s Camel release(s) (offset: %s, limit: %s)",
                     result.size(), totalCount, actualOffset, limit != null ? limit : "all");
             return JToon.encode(result);
         } catch (Exception e) {
